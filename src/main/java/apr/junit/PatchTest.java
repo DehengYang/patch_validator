@@ -133,6 +133,19 @@ public class PatchTest{
 		// 4) I tried to export TZ, but still failed.
 		// Therefore, I decided to leave this problem as future work. This is not our focus now.
 		
+		// I find a solution!
+		// 1) I noticed that when running test methods is much more slower than running test cases. (9.8s for closure 103 tests, but 256.9s for test cases)
+		// interestingly, defects4j test uses around 33s... This is strange.
+		// 2) More importantly, there is no error in test method execution.
+		// Therefore, I plan to run tests rather than methods. but in apr test validation, I plan to use the following strategy:
+		// 1) run failed test methods;
+		// 2) run positive test methods in the failed test classes;
+		// 3) run other positive test methods in the rest test classes.
+		// or more simply, we can direct:
+		// 1) run failed test methods;
+		// 2) run all classes.
+		// This is pretty cool and straightforward.
+		
 		for (String testMethod : testMethods){
 			String className = testMethod.split("#")[0];
 			String methodName = testMethod.split("#")[1];
@@ -215,6 +228,8 @@ public class PatchTest{
 		System.out.format("tests size for execution: %d\n", tests.size());
 		long startT = System.currentTimeMillis();
 		
+		int cnt = 0;
+		
 		for (String test : tests){
 			String className = test;
 			
@@ -236,6 +251,7 @@ public class PatchTest{
 					}
 				}
 				
+				cnt = cnt + result.getRunCount();
 				DecimalFormat dF = new DecimalFormat("0.0000");
 				System.out.format("number of executed tests: %d, time cost: %s\n", result.getRunCount(), dF.format((float) result.getRunTime()/1000));
 			} catch (ClassNotFoundException e) {
@@ -244,6 +260,7 @@ public class PatchTest{
 			}
 		}
 		
+		System.out.format("[Patch test] total test cases in execution: %d\n", cnt);
 		System.out.format("[Patch test] failed tests size after execution: %d\n", failedTests.size());
 		for (String failed : failedTests){
 			System.out.format("[Patch test] failed test: %s\n", failed);
