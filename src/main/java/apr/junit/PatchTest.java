@@ -37,12 +37,13 @@ public class PatchTest{
 	public static void main(String args[]){
 		// get all tests
 		Map<String, String> parameters = setParameters(args);
-		if (parameters.size() != 1){
-			for (Map.Entry<String, String> entry : parameters.entrySet()){
-				System.out.format("paras: %s %s\n", entry.getKey(), entry.getValue());
-			}
-			System.err.println("The paramter should only contain testFile or testStr");
-		}else if (parameters.containsKey("testFile")){
+//		if (parameters.size() != 1){
+//			for (Map.Entry<String, String> entry : parameters.entrySet()){
+//				System.out.format("paras: %s %s\n", entry.getKey(), entry.getValue());
+//			}
+//			System.err.println("The paramter should only contain testFile or testStr");
+//		}else 
+		if (parameters.containsKey("testFile")){
 			String filePath = parameters.get("testFile");
 			testsToRun = readFile(filePath);
 		}else if (parameters.containsKey("testStr")){
@@ -76,15 +77,15 @@ public class PatchTest{
 				Result result = new JUnitCore().run(request);
 				
 				if (!result.wasSuccessful()){
-//					failedTestMethods.add(test);
+					failedTestMethods.add(className + "#" + methodName);
 					if (printTrace){
 						for (Failure failure : result.getFailures()){
 							System.out.format("failed trace info: %s\n\n", failure.getTrace());
 							System.out.format("failed trace description: %s\n\n", failure.getDescription());
 							// testIssue820(com.google.javascript.jscomp.CollapseVariableDeclarationsTest)
-							String failedTestClassName = failure.getDescription().toString().trim().split("\\(")[1].split("\\)")[0];
-							String failedTestMethodName = failure.getDescription().toString().trim().split("\\(")[0];
-							failedTestMethods.add(failedTestClassName + "#" + failedTestMethodName);
+//							String failedTestClassName = failure.getDescription().toString().trim().split("\\(")[1].split("\\)")[0];
+//							String failedTestMethodName = failure.getDescription().toString().trim().split("\\(")[0];
+//							failedTestMethods.add(failedTestClassName + "#" + failedTestMethodName);
 						}
 					}
 				}
@@ -253,7 +254,7 @@ public class PatchTest{
         	parameters.put("testStr", cli.getOptionValue("testStr"));
         }
         if(cli.hasOption("runTestMethods")){
-        	parameters.put("runTestMethods", cli.getOptionValue("testStr"));
+        	parameters.put("runTestMethods", cli.getOptionValue("runTestMethods"));
         }
 		return parameters;
     }
