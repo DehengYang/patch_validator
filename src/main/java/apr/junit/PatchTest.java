@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore.Entry;
 import java.text.DecimalFormat;
@@ -123,10 +124,22 @@ public class PatchTest{
 		// face a weird bug: 
 		// /home/apr/env/jdk1.7.0_80/bin/java -cp /home/apr/d4j/Chart/Chart_17/build/:/home/apr/d4j/Chart/Chart_17/build-tests/:/home/apr/d4j/Chart/Chart_17/lib/servlet.jar:/home/apr/d4j/Chart/Chart_17/lib/itext-2.0.6.jar:/home/apr/apr_tools/tbar-ori/TBar-dale/externel/target/PatchTest-0.0.1-SNAPSHOT-jar-with-dependencies.jar apr.junit.PatchTest -testFile /mnt/benchmarks/buggylocs/Defects4J/Defects4J_Chart_17/Dale_APR/FL/test_methods.txt -runTestMethods true
 		// extra failed test methods.
+		// I tried a lot of attempts, and found that when the positions of failed methods are changed, they passed.
+		// 1) change order -> passed
+		// 2) find that "org.jfree.chart.axis.junit.SegmentedTimelineTests2" impacts the extra failed methods "org.jfree.chart.axis.junit.SegmentedTimelineTests"...
+		// 3) I run arja on Closure 103, my patch test has 115 failed methods, while ajra has 127 failed methods...
+		// The arja cmd is: /home/apr/env/jdk1.8.0_202/jre/bin/java -cp /mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/build/classes/:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/build/test/:/mnt/recursive-repairthemall/RepairThemAll-Nopol/libs/arja_external/bin:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/lib/hamcrest-core-1.1.jar:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/lib/ant_deploy.jar:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/build/classes:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/lib/junit4-legacy.jar:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/lib/junit4-core.jar:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/build/test:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/lib/google_common_deploy.jar:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/lib/protobuf_deploy.jar:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/lib/libtrunk_rhino_parser_jarjared.jar  us.msu.cse.repair.external.junit.JUnitTestRunner   @/mnt/benchmarks/buggylocs/Defects4J/Defects4J_Closure_103/Dale_APR/FL/test_methods.txt
+		// none is perfect.
+		// 4) I tried to export TZ, but still failed.
+		// Therefore, I decided to leave this problem as future work. This is not our focus now.
 		
 		for (String testMethod : testMethods){
 			String className = testMethod.split("#")[0];
 			String methodName = testMethod.split("#")[1];
+			
+			// debugging use
+//			runCmdNoOutput("TZ=\"America/New_York\"; export TZ");
+			
 			try {
 //				long startT = System.currentTimeMillis();
 				Request request = Request.method(Class.forName(className), methodName);
@@ -163,6 +176,33 @@ public class PatchTest{
 		
 		DecimalFormat dF = new DecimalFormat("0.0000");
 		System.out.format("Total time cost for run the test method(s): %s\n", dF.format((float) (System.currentTimeMillis() - startT)/1000));
+	}
+	
+	/**
+	 * @Description copy from my apr project 
+	 * @author apr
+	 * @version Apr 5, 2020
+	 *
+	 * @param cmd
+	 */
+	public static void runCmdNoOutput(String cmd) {
+		try{
+			String[] commands = {"bash", "-c", cmd};
+			Process proc = Runtime.getRuntime().exec(commands);
+
+			proc.getInputStream();
+			
+//			BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+//			
+//			// read output
+//			String line = null;
+//			while ((line = stdInput.readLine()) != null){
+//				System.out.println("Cmd Output: " + line);
+////				output += line + "\n";
+//			}
+		}catch (Exception err){
+			err.printStackTrace();
+		}
 	}
 	
 	/*
