@@ -66,8 +66,6 @@ public class PatchTest{
 		if (parameters.containsKey("savePath")){
 			saveFailedMethods(parameters.get("savePath"));
 		}
-		
-		System.exit(0);
 	}
 	
 	/** @Description 
@@ -223,7 +221,7 @@ public class PatchTest{
 	 */
 	public static void runTests(List<String> tests){
 		List<String> failedTests = new ArrayList<>();
-		List<String> failedTestMethods = new ArrayList<>();
+//		List<String> failedTestMethods = new ArrayList<>();
 		
 		System.out.format("tests size for execution: %d\n", tests.size());
 		long startT = System.currentTimeMillis();
