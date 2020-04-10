@@ -66,6 +66,8 @@ public class PatchTest{
 		if (parameters.containsKey("savePath")){
 			saveFailedMethods(parameters.get("savePath"));
 		}
+		
+		System.exit(0);
 	}
 	
 	/** @Description 
@@ -180,13 +182,13 @@ public class PatchTest{
 			}
 		}
 		
-		System.out.format("[Patch test] failed test methods size after execution: %d\n", failedTestMethods.size());
+		System.out.format("[Junit test] failed test methods size after execution: %d\n", failedTestMethods.size());
 		for (String failed : failedTestMethods){
-			System.out.format("[Patch test] failed test method: %s\n", failed);
+			System.out.format("[Junit test] failed test method: %s\n", failed);
 		}
 		
 		DecimalFormat dF = new DecimalFormat("0.0000");
-		System.out.format("Total time cost for run the test method(s): %s\n", dF.format((float) (System.currentTimeMillis() - startT)/1000));
+		System.out.format("[Junit test] Total time cost for running the test method(s): %s\n", dF.format((float) (System.currentTimeMillis() - startT)/1000));
 	}
 	
 	/**
@@ -258,18 +260,18 @@ public class PatchTest{
 			}
 		}
 		
-		System.out.format("[Patch test] total test cases in execution: %d\n", cnt);
-		System.out.format("[Patch test] failed tests size after execution: %d\n", failedTests.size());
+		System.out.format("[Junit test] total test cases in execution: %d\n", cnt);
+		System.out.format("[Junit test] failed tests size after execution: %d\n", failedTests.size());
 		for (String failed : failedTests){
-			System.out.format("[Patch test] failed test: %s\n", failed);
+			System.out.format("[Junit test] failed test: %s\n", failed);
 		}
-		System.out.format("[Patch test] failed test methods size after execution: %d\n", failedTestMethods.size());
+		System.out.format("[Junit test] failed test methods size after execution: %d\n", failedTestMethods.size());
 		for (String failed : failedTestMethods){
-			System.out.format("[Patch test] failed test method: %s\n", failed);
+			System.out.format("[Junit test] failed test method: %s\n", failed);
 		}
 		
 		DecimalFormat dF = new DecimalFormat("0.0000");
-		System.out.format("Total time cost for run the test(s): %s\n", dF.format((float) (System.currentTimeMillis() - startT)/1000));
+		System.out.format("[Junit test] Total time cost for running the test(s): %s\n", dF.format((float) (System.currentTimeMillis() - startT)/1000));
 	}
 	
 	
