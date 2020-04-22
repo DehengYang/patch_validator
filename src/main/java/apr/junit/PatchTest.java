@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -29,6 +30,8 @@ import org.junit.runner.Request;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
+import apr.junit.utils.TimeOut;
+
 /*
  * This is to run junit tests of buggy program. This external java file can be 
  * invoked via java -cp <classpath> (i.e., specify all dependencies), therefore it's more stable
@@ -39,7 +42,27 @@ public class PatchTest{
 	private static List<String> testsToRun;
 	private static List<String> failedTestMethods = new ArrayList<>();
 	
-	public static void main(String args[]){
+	public static void main(final String args[]){
+		int timeout = 60;
+
+		final long startTime = System.currentTimeMillis();
+		try {
+			TimeOut.runWithTimeout(new Runnable() {
+				@Override
+				public void run() {
+					mainTask(args);
+				}
+			}, timeout, TimeUnit.MINUTES);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+
+		System.out.format("time used: {}", countTime(startTime));
+
+		System.exit(0);
+	}
+	
+	public static void mainTask(String[] args){
 		// get all tests
 		Map<String, String> parameters = setParameters(args);
 //		if (parameters.size() != 1){
@@ -55,19 +78,31 @@ public class PatchTest{
 			String testStr = parameters.get("testStr");
 			testsToRun = Arrays.asList(testStr.trim().split(File.pathSeparator));
 		}
-		
+
 		if (parameters.containsKey("runTestMethods") && parameters.get("runTestMethods").equals("true")){
 			runTestMethods(testsToRun);
 		}else{
 			runTests(testsToRun);
 		}
-		
+
 		// save failed methods
 		if (parameters.containsKey("savePath")){
 			saveFailedMethods(parameters.get("savePath"));
 		}
-		
-		System.exit(0);
+	}
+	
+	/**
+	 * @Description borrowed from my-apr framework 
+	 * @author apr
+	 * @version Apr 21, 2020
+	 *
+	 * @param startTime
+	 * @return
+	 */
+	public static String countTime(long startTime){
+		DecimalFormat dF = new DecimalFormat("0.0000");
+//		Util.startTime = System.currentTimeMillis();
+		return dF.format((float) (System.currentTimeMillis() - startTime)/1000);
 	}
 	
 	/** @Description 
@@ -228,7 +263,9 @@ public class PatchTest{
 		System.out.format("tests size for execution: %d\n", tests.size());
 		long startT = System.currentTimeMillis();
 		
-		int cnt = 0;
+		int cnt = 0; // test cases/methods cnt
+		int size = failedTests.size();
+		int testCnt = 0;
 		
 		for (String test : tests){
 			String className = test;
@@ -252,8 +289,9 @@ public class PatchTest{
 				}
 				
 				cnt = cnt + result.getRunCount();
+				testCnt ++;
 				DecimalFormat dF = new DecimalFormat("0.0000");
-				System.out.format("number of executed tests: %d, time cost: %s\n", result.getRunCount(), dF.format((float) result.getRunTime()/1000));
+				System.out.format("[%d/%d] number of executed tests: %d, time cost: %s\n", testCnt, size, result.getRunCount(), dF.format((float) result.getRunTime()/1000));
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
