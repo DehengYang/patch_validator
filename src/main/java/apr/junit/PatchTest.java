@@ -57,7 +57,7 @@ public class PatchTest{
 			e1.printStackTrace();
 		}
 
-		System.out.format("time used: {}", countTime(startTime));
+		System.out.format("time used: %s\n", countTime(startTime));
 
 		System.exit(0);
 	}
@@ -281,9 +281,22 @@ public class PatchTest{
 							System.out.format("failed trace info: %s\n", failure.getTrace());
 							System.out.format("failed trace description: %s\n", failure.getDescription());
 							// testIssue820(com.google.javascript.jscomp.CollapseVariableDeclarationsTest)
-							String failedTestClassName = failure.getDescription().toString().trim().split("\\(")[1].split("\\)")[0];
-							String failedTestMethodName = failure.getDescription().toString().trim().split("\\(")[0];
-							failedTestMethods.add(failedTestClassName + "#" + failedTestMethodName);
+							
+							// general: failed trace description: testIODirectoryNotWritable(org.apache.flink.runtime.taskmanager.TestManagerStartupTest)
+							
+							// failed trace description: org.apache.flink.runtime.io.network.partition.PartialConsumePipelinedResultTest
+							// java.lang.ArrayIndexOutOfBoundsException: 1
+							// exposed by: Bugs.jar_Flink_06e2da35 replicateTests 
+							String desp = failure.getDescription().toString().trim();
+							if (desp.contains("(") && desp.contains(")")){
+								String failedTestClassName = desp.split("\\(")[1].split("\\)")[0];
+								String failedTestMethodName = desp.split("\\(")[0];
+								failedTestMethods.add(failedTestClassName + "#" + failedTestMethodName);
+							}else{
+//								System.out.println("debug1: " + failure.getDescription());
+//								System.out.println("debug2: " + failure.getDescription().toString());
+								failedTestMethods.add(desp + "# ");
+							}
 						}
 					}
 				}
