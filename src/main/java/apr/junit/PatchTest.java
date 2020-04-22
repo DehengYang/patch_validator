@@ -264,7 +264,7 @@ public class PatchTest{
 		long startT = System.currentTimeMillis();
 		
 		int cnt = 0; // test cases/methods cnt
-		int size = failedTests.size();
+		int size = tests.size();
 		int testCnt = 0;
 		
 		for (String test : tests){
