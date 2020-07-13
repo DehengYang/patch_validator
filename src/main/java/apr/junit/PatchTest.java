@@ -42,8 +42,10 @@ public class PatchTest{
 	private static List<String> testsToRun;
 	private static List<String> failedTestMethods = new ArrayList<>();
 	
+	private static Result result;
+	
 	public static void main(final String args[]){
-		int timeout = 60;
+		int timeout = 30;//minutes for main
 
 		final long startTime = System.currentTimeMillis();
 		try {
@@ -181,6 +183,7 @@ public class PatchTest{
 		// 2) run all classes.
 		// This is pretty cool and straightforward.
 		
+		int timeout = 200;//timeout for a single method execution
 		for (String testMethod : testMethods){
 			String className = testMethod.split("#")[0];
 			String methodName = testMethod.split("#")[1];
@@ -190,10 +193,30 @@ public class PatchTest{
 			
 			try {
 //				long startT = System.currentTimeMillis();
-				Request request = Request.method(Class.forName(className), methodName);
-				Result result = new JUnitCore().run(request);
+				final Request request = Request.method(Class.forName(className), methodName);
+//				Result result = null;
 				
-				if (!result.wasSuccessful()){
+				result = null;
+				try {
+					TimeOut.runWithTimeout(new Runnable() {
+						@Override
+						public void run() {
+							result = new JUnitCore().run(request);
+						}
+					}, timeout, TimeUnit.SECONDS);
+				} catch (Exception e1) {
+					System.out.format("failed method execution timeout: %s\n", className + "#" + methodName);
+					failedTestMethods.add(className + "#" + methodName);
+					e1.printStackTrace();
+					continue;
+				}
+				
+//				Result result = new JUnitCore().run(request);
+				
+				if (result == null){
+					failedTestMethods.add(className + "#" + methodName);
+					System.out.format("failed method execution: %s (result is null)\n", className + "#" + methodName);
+				}else if (!result.wasSuccessful()){
 					failedTestMethods.add(className + "#" + methodName);
 					if (printTrace){
 						for (Failure failure : result.getFailures()){
@@ -267,14 +290,33 @@ public class PatchTest{
 		int size = tests.size();
 		int testCnt = 0;
 		
+		int timeout = 600;//timeout for a test class execution
 		for (String test : tests){
 			String className = test;
 			
 			try {
-				Request request = Request.aClass(Class.forName(className));
-				Result result = new JUnitCore().run(request);
+				final Request request = Request.aClass(Class.forName(className));
+//				Result result = new JUnitCore().run(request);
 				
-				if (!result.wasSuccessful()){
+				result = null;
+				try {
+					TimeOut.runWithTimeout(new Runnable() {
+						@Override
+						public void run() {
+							result = new JUnitCore().run(request);
+						}
+					}, timeout, TimeUnit.SECONDS);
+				} catch (Exception e1) {
+					System.out.format("failed test class execution timeout: %s\n", className);
+					failedTests.add(className);
+					e1.printStackTrace();
+					continue;
+				}
+				
+				if (result == null){
+					failedTests.add(test);
+					System.out.format("failed test class execution: %s (result is null)\n", className);
+				}else if(!result.wasSuccessful()){
 					failedTests.add(test);
 					if (printTrace){
 						for (Failure failure : result.getFailures()){

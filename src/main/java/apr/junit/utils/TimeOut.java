@@ -46,7 +46,7 @@ public class TimeOut {
 			//remove this if you do not want to cancel the job in progress
 			//or set the argument to 'false' if you do not want to interrupt the thread
 			future.cancel(true);
-			System.out.format("Timeout: {} {}. Now exit.\n", timeout, timeUnit);
+			System.out.format("Timeout: %s %s. Now exit.\n", timeout, timeUnit);
 			throw e;
 		}catch (ExecutionException e) {
 			//unwrap the root cause
