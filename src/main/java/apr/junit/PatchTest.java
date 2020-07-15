@@ -60,6 +60,7 @@ public class PatchTest{
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		} finally{
+			failedTestMethods.add(String.format("test execution timeout! (%s min)", timeout));
 			// save failed methods
 			if (parameters.containsKey("savePath")){
 				saveFailedMethods(parameters.get("savePath"));
