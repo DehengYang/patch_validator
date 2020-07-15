@@ -44,6 +44,8 @@ public class PatchTest{
 	
 	private static Result result;
 	
+	private static Map<String, String> parameters = new HashMap<>();
+	
 	public static void main(final String args[]){
 		int timeout = 30;//minutes for main
 
@@ -57,6 +59,11 @@ public class PatchTest{
 			}, timeout, TimeUnit.MINUTES);
 		} catch (Exception e1) {
 			e1.printStackTrace();
+		} finally{
+			// save failed methods
+			if (parameters.containsKey("savePath")){
+				saveFailedMethods(parameters.get("savePath"));
+			}
 		}
 
 		System.out.format("time used: %s\n", countTime(startTime));
@@ -66,7 +73,9 @@ public class PatchTest{
 	
 	public static void mainTask(String[] args){
 		// get all tests
-		Map<String, String> parameters = setParameters(args);
+//		Map<String, String> parameters = setParameters(args);
+		setParameters(args);
+		
 //		if (parameters.size() != 1){
 //			for (Map.Entry<String, String> entry : parameters.entrySet()){
 //				System.out.format("paras: %s %s\n", entry.getKey(), entry.getValue());
@@ -85,11 +94,6 @@ public class PatchTest{
 			runTestMethods(testsToRun);
 		}else{
 			runTests(testsToRun);
-		}
-
-		// save failed methods
-		if (parameters.containsKey("savePath")){
-			saveFailedMethods(parameters.get("savePath"));
 		}
 	}
 	
@@ -281,7 +285,7 @@ public class PatchTest{
 	 */
 	public static void runTests(List<String> tests){
 		List<String> failedTests = new ArrayList<>();
-//		List<String> failedTestMethods = new ArrayList<>();
+//		List<String> failedTestMethods = new ArrayLis t<>();
 		
 		System.out.format("tests size for execution: %d\n", tests.size());
 		long startT = System.currentTimeMillis();
@@ -432,8 +436,8 @@ public class PatchTest{
 	/*
 	 * receive parameters
 	 */
-	private static Map<String, String>  setParameters(String[] args) {		
-		Map<String, String> parameters = new HashMap<>();
+	private static void setParameters(String[] args) {		
+//		Map<String, String> parameters = new HashMap<>();
 		
         Option opt1 = new Option("testFile","testFile",true,"a file containing tests like org.apache.commons.math3.stat.StatUtilsTest#testSumLog (test methods or tests)");
         opt1.setRequired(false);
@@ -473,6 +477,6 @@ public class PatchTest{
         if(cli.hasOption("savePath")){
         	parameters.put("savePath", cli.getOptionValue("savePath"));
         }
-		return parameters;
+//		return parameters;
     }
 }
