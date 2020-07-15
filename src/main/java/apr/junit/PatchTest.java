@@ -297,6 +297,7 @@ public class PatchTest{
 			try {
 				final Request request = Request.aClass(Class.forName(className));
 //				Result result = new JUnitCore().run(request);
+				System.out.format("current test: %s\n", className);
 				
 				result = null;
 				try {
@@ -309,6 +310,7 @@ public class PatchTest{
 				} catch (Exception e1) {
 					System.out.format("failed test class execution timeout: %s\n", className);
 					failedTests.add(className);
+					failedTestMethods.add(className);
 					e1.printStackTrace();
 					continue;
 				}
