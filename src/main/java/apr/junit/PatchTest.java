@@ -58,9 +58,9 @@ public class PatchTest{
 				}
 			}, timeout, TimeUnit.MINUTES);
 		} catch (Exception e1) {
+			failedTestMethods.add(String.format("test execution timeout! (%s min)", timeout));
 			e1.printStackTrace();
 		} finally{
-			failedTestMethods.add(String.format("test execution timeout! (%s min)", timeout));
 			// save failed methods
 			if (parameters.containsKey("savePath")){
 				saveFailedMethods(parameters.get("savePath"));
