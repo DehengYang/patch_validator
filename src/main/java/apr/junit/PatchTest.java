@@ -336,6 +336,7 @@ public class PatchTest{
 				
 				if (result == null){
 					failedTests.add(test);
+					failedTestMethods.add(className);
 					System.out.format("failed test class execution: %s (result is null)\n", className);
 				}else if(!result.wasSuccessful()){
 					failedTests.add(test);
@@ -369,7 +370,21 @@ public class PatchTest{
 				DecimalFormat dF = new DecimalFormat("0.0000");
 				System.out.format("[%d/%d] number of executed tests: %d, time cost: %s\n", testCnt, size, result.getRunCount(), dF.format((float) result.getRunTime()/1000));
 			} catch (ClassNotFoundException e) {
+				failedTests.add(test);
+				failedTestMethods.add(className);
 				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}catch (StackOverflowError e) {//Throwable // StackOverflowError
+				failedTests.add(test);
+				failedTestMethods.add(className);
+				//unwrap the root cause
+				System.out.format("StackOverflowError. Now exit.\n");
+				e.printStackTrace();
+			}catch (java.lang.Error e) {//Throwable // StackOverflowError
+				failedTests.add(test);
+				failedTestMethods.add(className);
+				//unwrap the root cause
+				System.out.format("Other error. Now exit.\n");
 				e.printStackTrace();
 			}
 		}
