@@ -59,6 +59,12 @@ public class TimeOut {
 				throw new IllegalStateException(t);
 			}
 		}
+		// not needed
+//		catch (Throwable throwable) {
+//            // Output unexpected Throwables.
+//			throw throwable;
+//        }
+		
 		// refer to: https://stackoverflow.com/questions/5715235/java-set-timeout-on-a-certain-block-of-code
 //		if (!executor.isTerminated()){
 //			executor.shutdownNow(); // If you want to stop the code that hasn't finished.

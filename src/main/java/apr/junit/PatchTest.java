@@ -60,6 +60,9 @@ public class PatchTest{
 		} catch (Exception e1) {
 			failedTestMethods.add(String.format("test execution timeout! (%s min)", timeout));
 			e1.printStackTrace();
+		}catch (Error er) {
+			failedTestMethods.add(String.format("test execution timeout! (%s min)", timeout));
+			er.printStackTrace();
 		} finally{
 			// save failed methods
 			if (parameters.containsKey("savePath")){
@@ -240,7 +243,18 @@ public class PatchTest{
 //				DecimalFormat dF = new DecimalFormat("0.0000");
 //				System.out.format("number of executed tests: %d, time cost: %s\n", result.getRunCount(), dF.format((float) result.getRunTime()/1000));
 			} catch (ClassNotFoundException e) {
+				failedTestMethods.add(className + "#" + methodName);
 				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}catch (StackOverflowError e) {//Throwable // StackOverflowError
+				failedTestMethods.add(className + "#" + methodName);
+				//unwrap the root cause
+				System.out.format("StackOverflowError. Now exit.\n");
+				e.printStackTrace();
+			}catch (java.lang.Error e) {//Throwable // StackOverflowError
+				failedTestMethods.add(className + "#" + methodName);
+				//unwrap the root cause
+				System.out.format("Other error. Now exit.\n");
 				e.printStackTrace();
 			}
 		}
