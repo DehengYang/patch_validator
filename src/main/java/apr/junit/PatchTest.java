@@ -109,7 +109,6 @@ public class PatchTest{
 	 */
 	public static String countTime(long startTime){
 		DecimalFormat dF = new DecimalFormat("0.0000");
-//		Util.startTime = System.currentTimeMillis();
 		return dF.format((float) (System.currentTimeMillis() - startTime)/1000);
 	}
 	
@@ -146,7 +145,6 @@ public class PatchTest{
 			for(String line : lines){
 				output.write(line + "\n");
 			}
-//			output.write(content);
 			output.close();
         } catch (final IOException e) {
             e.printStackTrace();
@@ -177,8 +175,6 @@ public class PatchTest{
 	 * run tests with method name, and stops once a test case fails.
 	 */
 	public static void runTestMethods(List<String> testMethods){
-//		List<String> failedTestMethods = new ArrayList<>();
-		
 		System.out.format("test methods size for execution: %d\n", testMethods.size());
 		long startT = System.currentTimeMillis();
 		
@@ -210,55 +206,28 @@ public class PatchTest{
 		// This is pretty cool and straightforward.
 		
 		int timeout = 200;//timeout for a single method execution
-//		long totalT = 0;
-//		int cnt = 0;
-//		long totalTT = 0;
-//		String savePath = parameters.get("savePath");
-//		String debugPath = savePath.substring(0, savePath.lastIndexOf("/")) + "/" + "methodsRunTime.txt";
-//		writeLinesToFile(debugPath,  "", false);
 		DecimalFormat dF = new DecimalFormat("0.0000");
 		for (String testMethod : testMethods){
 			String className = testMethod.split("#")[0];
 			String methodName = testMethod.split("#")[1];
 			
-			// debugging use
-//			runCmdNoOutput("TZ=\"America/New_York\"; export TZ");
-			
 			try {
-//				long tmpT = System.currentTimeMillis();
 				final Request request = Request.method(Class.forName(className), methodName);
-//				Result result = null;
-//				totalT = totalT + (long) (System.currentTimeMillis() - tmpT);
-//				cnt ++;
-				
-//				result = null;
-//				final JUnitCore core = new JUnitCore();
-//				result = new JUnitCore().run(request);
-//				writeLinesToFile(debugPath,className + "#" + methodName + ":" + dF.format((float) (System.currentTimeMillis() - tmpT)/1000), true);
-//					writeLinesToFile(debugPath,className + "#" + methodName + ":" + dF.format((float) result.getRunTime()/1000), true);
 				
 //				result = null;
 				try {
-//					tmpT = System.currentTimeMillis();
-//					result = new JUnitCore().run(request);
 					TimeOut.runWithTimeout(new Runnable() {
 						@Override
 						public void run() {
 							result = new JUnitCore().run(request);
 						}
 					}, timeout, TimeUnit.SECONDS);
-//					totalTT = totalTT + (long) (System.currentTimeMillis() - tmpT);
-//					writeLinesToFile(debugPath,className + "#" + methodName + ":" + dF.format((float) (System.currentTimeMillis() - tmpT)/1000), true);
-//					writeLinesToFile(debugPath,className + "#" + methodName + ":" + dF.format((float) result.getRunTime()/1000), true);
 				} catch (Exception e1) {
 					System.out.format("failed method execution timeout: %s\n", className + "#" + methodName);
 					failedTestMethods.add(className + "#" + methodName);
 					e1.printStackTrace();
-//					continue;
 					return;
 				}
-				
-//				Result result = new JUnitCore().run(request);
 				
 				if (result == null){
 					failedTestMethods.add(className + "#" + methodName);
@@ -276,27 +245,20 @@ public class PatchTest{
 //							failedTestMethods.add(failedTestClassName + "#" + failedTestMethodName);
 						}
 					}
-//					DecimalFormat dF = new DecimalFormat("0.0000");
 					System.out.format("failed method execution time cost: %s\n", dF.format((float) result.getRunTime()/1000));
 					return;
 				}
-				
-//				DecimalFormat dF = new DecimalFormat("0.0000");
-//				System.out.format("number of executed tests: %d, time cost: %s\n", result.getRunCount(), dF.format((float) result.getRunTime()/1000));
 			} catch (ClassNotFoundException e) {
 				failedTestMethods.add(className + "#" + methodName);
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return;
 			}catch (StackOverflowError e) {//Throwable // StackOverflowError
 				failedTestMethods.add(className + "#" + methodName);
-				//unwrap the root cause
 				System.out.format("StackOverflowError. Now exit.\n");
 				e.printStackTrace();
 				return;
 			}catch (java.lang.Error e) {//Throwable // StackOverflowError
 				failedTestMethods.add(className + "#" + methodName);
-				//unwrap the root cause
 				System.out.format("Other error. Now exit.\n");
 				e.printStackTrace();
 				return;
@@ -308,11 +270,7 @@ public class PatchTest{
 			System.out.format("[Junit test] failed test method: %s\n", failed);
 		}
 		
-//		DecimalFormat dF = new DecimalFormat("0.0000");
 		System.out.format("[Junit test] Total time cost for running the test method(s): %s\n", dF.format((float) (System.currentTimeMillis() - startT)/1000));
-		
-//		System.out.format("[Junit test] Total time cost for requests creation: %s %s\n", dF.format((float) (totalT)/1000), dF.format((float) (totalTT)/1000), cnt);//totalT/1000);
-//		System.out.format("[Junit test] Total time cost for requests creation: %s\n", dF.format((float) (totalT)/1000));//totalT/1000);
 	}
 	
 	/*
@@ -320,7 +278,6 @@ public class PatchTest{
 	 */
 	public static void runTests(List<String> tests){
 		List<String> failedTests = new ArrayList<>();
-//		List<String> failedTestMethods = new ArrayLis t<>();
 		
 		System.out.format("tests size for execution: %d\n", tests.size());
 		long startT = System.currentTimeMillis();
@@ -330,34 +287,23 @@ public class PatchTest{
 		int testCnt = 0;
 		
 		int timeout = 600;//timeout for a test class execution
-		
-//		String savePath = parameters.get("savePath");
-//		String debugPath = savePath.substring(0, savePath.lastIndexOf("/")) + "/" + "testsRunTime.txt";
-//		writeLinesToFile(debugPath, "", false);
-//		writeLinesToFile("testsRunTime.txt", "", true);
 		DecimalFormat dF = new DecimalFormat("0.0000");
-//		long totalT = 0;
+		
 		for (String test : tests){
 			String className = test;
 			
 			try {
-//				long tmpT = System.currentTimeMillis();
 				final Request request = Request.aClass(Class.forName(className));
-//				Result result = new JUnitCore().run(request);
 				System.out.format("current test: %s\n", className);
-//				totalT = totalT + (long) (System.currentTimeMillis() - tmpT);
 				
 //				result = null;
 				try {
-//					tmpT = System.currentTimeMillis();
 					TimeOut.runWithTimeout(new Runnable() {
 						@Override
 						public void run() {
 							result = new JUnitCore().run(request);
 						}
 					}, timeout, TimeUnit.SECONDS);
-//					writeLinesToFile(debugPath,className + ":" + dF.format((float) (System.currentTimeMillis() - tmpT)/1000), true);
-//					writeLinesToFile(debugPath, className + ":" + dF.format((float) result.getRunTime()/1000), true);
 				} catch (Exception e1) {
 					System.out.format("failed test class execution timeout: %s\n", className);
 					failedTests.add(className);
@@ -399,24 +345,19 @@ public class PatchTest{
 				
 				cnt = cnt + result.getRunCount();
 				testCnt ++;
-//				DecimalFormat dF = new DecimalFormat("0.0000");
-//				writeLinesToFile(debugPath, String.format("[%d/%d] number of executed tests: %d, time cost: %s\n", testCnt, size, result.getRunCount(), dF.format((float) result.getRunTime()/1000)), true);
 				System.out.format("[%d/%d] number of executed tests: %d, time cost: %s\n", testCnt, size, result.getRunCount(), dF.format((float) result.getRunTime()/1000));
 			} catch (ClassNotFoundException e) {
 				failedTests.add(test);
 				failedTestMethods.add(className);
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}catch (StackOverflowError e) {//Throwable // StackOverflowError
 				failedTests.add(test);
 				failedTestMethods.add(className);
-				//unwrap the root cause
 				System.out.format("StackOverflowError. Now exit.\n");
 				e.printStackTrace();
 			}catch (java.lang.Error e) {//Throwable // StackOverflowError
 				failedTests.add(test);
 				failedTestMethods.add(className);
-				//unwrap the root cause
 				System.out.format("Other error. Now exit.\n");
 				e.printStackTrace();
 			}
@@ -432,10 +373,7 @@ public class PatchTest{
 			System.out.format("[Junit test] failed test method: %s\n", failed);
 		}
 		
-//		DecimalFormat dF = new DecimalFormat("0.0000");
 		System.out.format("[Junit test] Total time cost for running the test(s): %s\n", dF.format((float) (System.currentTimeMillis() - startT)/1000));
-		
-//		System.out.format("[Junit test] Total time cost for requests creation: %s\n", dF.format((float) (totalT)/1000));//totalT/1000);
 	}
 	
 	/*
