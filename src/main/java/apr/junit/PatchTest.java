@@ -7,13 +7,10 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyStore.Entry;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +63,8 @@ public class PatchTest{
 		} finally{
 			// save failed methods
 			if (parameters.containsKey("savePath")){
-				saveFailedMethods(parameters.get("savePath"));
+				String savePath = parameters.get("savePath");
+				saveFailedMethods(savePath);
 			}
 		}
 
@@ -154,9 +152,29 @@ public class PatchTest{
             e.printStackTrace();
         }
 	}
+	
+	public static void writeLinesToFile(String path, String line, boolean append){
+		// get dir
+		String dirPath = path.substring(0, path.lastIndexOf("/"));
+		File dir = new File(dirPath);
+		if (!dir.exists()){
+			dir.mkdirs();
+			System.out.println(String.format("%s does not exists, and are created now via mkdirs()", dirPath));
+		}
+		
+		BufferedWriter output = null;
+		try {
+			output = new BufferedWriter(new FileWriter(path, append));
+			output.write(line + "\n");
+//			output.write(content);
+			output.close();
+        } catch (final IOException e) {
+            e.printStackTrace();
+        }
+	}
 
 	/*
-	 * run tests with method name
+	 * run tests with method name, and stops once a test case fails.
 	 */
 	public static void runTestMethods(List<String> testMethods){
 //		List<String> failedTestMethods = new ArrayList<>();
@@ -192,6 +210,13 @@ public class PatchTest{
 		// This is pretty cool and straightforward.
 		
 		int timeout = 200;//timeout for a single method execution
+//		long totalT = 0;
+//		int cnt = 0;
+//		long totalTT = 0;
+//		String savePath = parameters.get("savePath");
+//		String debugPath = savePath.substring(0, savePath.lastIndexOf("/")) + "/" + "methodsRunTime.txt";
+//		writeLinesToFile(debugPath,  "", false);
+		DecimalFormat dF = new DecimalFormat("0.0000");
 		for (String testMethod : testMethods){
 			String className = testMethod.split("#")[0];
 			String methodName = testMethod.split("#")[1];
@@ -200,23 +225,37 @@ public class PatchTest{
 //			runCmdNoOutput("TZ=\"America/New_York\"; export TZ");
 			
 			try {
-//				long startT = System.currentTimeMillis();
+//				long tmpT = System.currentTimeMillis();
 				final Request request = Request.method(Class.forName(className), methodName);
 //				Result result = null;
+//				totalT = totalT + (long) (System.currentTimeMillis() - tmpT);
+//				cnt ++;
 				
-				result = null;
+//				result = null;
+//				final JUnitCore core = new JUnitCore();
+//				result = new JUnitCore().run(request);
+//				writeLinesToFile(debugPath,className + "#" + methodName + ":" + dF.format((float) (System.currentTimeMillis() - tmpT)/1000), true);
+//					writeLinesToFile(debugPath,className + "#" + methodName + ":" + dF.format((float) result.getRunTime()/1000), true);
+				
+//				result = null;
 				try {
+//					tmpT = System.currentTimeMillis();
+//					result = new JUnitCore().run(request);
 					TimeOut.runWithTimeout(new Runnable() {
 						@Override
 						public void run() {
 							result = new JUnitCore().run(request);
 						}
 					}, timeout, TimeUnit.SECONDS);
+//					totalTT = totalTT + (long) (System.currentTimeMillis() - tmpT);
+//					writeLinesToFile(debugPath,className + "#" + methodName + ":" + dF.format((float) (System.currentTimeMillis() - tmpT)/1000), true);
+//					writeLinesToFile(debugPath,className + "#" + methodName + ":" + dF.format((float) result.getRunTime()/1000), true);
 				} catch (Exception e1) {
 					System.out.format("failed method execution timeout: %s\n", className + "#" + methodName);
 					failedTestMethods.add(className + "#" + methodName);
 					e1.printStackTrace();
-					continue;
+//					continue;
+					return;
 				}
 				
 //				Result result = new JUnitCore().run(request);
@@ -224,6 +263,7 @@ public class PatchTest{
 				if (result == null){
 					failedTestMethods.add(className + "#" + methodName);
 					System.out.format("failed method execution: %s (result is null)\n", className + "#" + methodName);
+					return;
 				}else if (!result.wasSuccessful()){
 					failedTestMethods.add(className + "#" + methodName);
 					if (printTrace){
@@ -236,8 +276,9 @@ public class PatchTest{
 //							failedTestMethods.add(failedTestClassName + "#" + failedTestMethodName);
 						}
 					}
-					DecimalFormat dF = new DecimalFormat("0.0000");
+//					DecimalFormat dF = new DecimalFormat("0.0000");
 					System.out.format("failed method execution time cost: %s\n", dF.format((float) result.getRunTime()/1000));
+					return;
 				}
 				
 //				DecimalFormat dF = new DecimalFormat("0.0000");
@@ -246,16 +287,19 @@ public class PatchTest{
 				failedTestMethods.add(className + "#" + methodName);
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				return;
 			}catch (StackOverflowError e) {//Throwable // StackOverflowError
 				failedTestMethods.add(className + "#" + methodName);
 				//unwrap the root cause
 				System.out.format("StackOverflowError. Now exit.\n");
 				e.printStackTrace();
+				return;
 			}catch (java.lang.Error e) {//Throwable // StackOverflowError
 				failedTestMethods.add(className + "#" + methodName);
 				//unwrap the root cause
 				System.out.format("Other error. Now exit.\n");
 				e.printStackTrace();
+				return;
 			}
 		}
 		
@@ -264,35 +308,11 @@ public class PatchTest{
 			System.out.format("[Junit test] failed test method: %s\n", failed);
 		}
 		
-		DecimalFormat dF = new DecimalFormat("0.0000");
+//		DecimalFormat dF = new DecimalFormat("0.0000");
 		System.out.format("[Junit test] Total time cost for running the test method(s): %s\n", dF.format((float) (System.currentTimeMillis() - startT)/1000));
-	}
-	
-	/**
-	 * @Description copy from my apr project 
-	 * @author apr
-	 * @version Apr 5, 2020
-	 *
-	 * @param cmd
-	 */
-	public static void runCmdNoOutput(String cmd) {
-		try{
-			String[] commands = {"bash", "-c", cmd};
-			Process proc = Runtime.getRuntime().exec(commands);
-
-			proc.getInputStream();
-			
-//			BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-//			
-//			// read output
-//			String line = null;
-//			while ((line = stdInput.readLine()) != null){
-//				System.out.println("Cmd Output: " + line);
-////				output += line + "\n";
-//			}
-		}catch (Exception err){
-			err.printStackTrace();
-		}
+		
+//		System.out.format("[Junit test] Total time cost for requests creation: %s %s\n", dF.format((float) (totalT)/1000), dF.format((float) (totalTT)/1000), cnt);//totalT/1000);
+//		System.out.format("[Junit test] Total time cost for requests creation: %s\n", dF.format((float) (totalT)/1000));//totalT/1000);
 	}
 	
 	/*
@@ -310,22 +330,34 @@ public class PatchTest{
 		int testCnt = 0;
 		
 		int timeout = 600;//timeout for a test class execution
+		
+//		String savePath = parameters.get("savePath");
+//		String debugPath = savePath.substring(0, savePath.lastIndexOf("/")) + "/" + "testsRunTime.txt";
+//		writeLinesToFile(debugPath, "", false);
+//		writeLinesToFile("testsRunTime.txt", "", true);
+		DecimalFormat dF = new DecimalFormat("0.0000");
+//		long totalT = 0;
 		for (String test : tests){
 			String className = test;
 			
 			try {
+//				long tmpT = System.currentTimeMillis();
 				final Request request = Request.aClass(Class.forName(className));
 //				Result result = new JUnitCore().run(request);
 				System.out.format("current test: %s\n", className);
+//				totalT = totalT + (long) (System.currentTimeMillis() - tmpT);
 				
-				result = null;
+//				result = null;
 				try {
+//					tmpT = System.currentTimeMillis();
 					TimeOut.runWithTimeout(new Runnable() {
 						@Override
 						public void run() {
 							result = new JUnitCore().run(request);
 						}
 					}, timeout, TimeUnit.SECONDS);
+//					writeLinesToFile(debugPath,className + ":" + dF.format((float) (System.currentTimeMillis() - tmpT)/1000), true);
+//					writeLinesToFile(debugPath, className + ":" + dF.format((float) result.getRunTime()/1000), true);
 				} catch (Exception e1) {
 					System.out.format("failed test class execution timeout: %s\n", className);
 					failedTests.add(className);
@@ -367,7 +399,8 @@ public class PatchTest{
 				
 				cnt = cnt + result.getRunCount();
 				testCnt ++;
-				DecimalFormat dF = new DecimalFormat("0.0000");
+//				DecimalFormat dF = new DecimalFormat("0.0000");
+//				writeLinesToFile(debugPath, String.format("[%d/%d] number of executed tests: %d, time cost: %s\n", testCnt, size, result.getRunCount(), dF.format((float) result.getRunTime()/1000)), true);
 				System.out.format("[%d/%d] number of executed tests: %d, time cost: %s\n", testCnt, size, result.getRunCount(), dF.format((float) result.getRunTime()/1000));
 			} catch (ClassNotFoundException e) {
 				failedTests.add(test);
@@ -399,8 +432,150 @@ public class PatchTest{
 			System.out.format("[Junit test] failed test method: %s\n", failed);
 		}
 		
-		DecimalFormat dF = new DecimalFormat("0.0000");
+//		DecimalFormat dF = new DecimalFormat("0.0000");
 		System.out.format("[Junit test] Total time cost for running the test(s): %s\n", dF.format((float) (System.currentTimeMillis() - startT)/1000));
+		
+//		System.out.format("[Junit test] Total time cost for requests creation: %s\n", dF.format((float) (totalT)/1000));//totalT/1000);
+	}
+	
+	/*
+	 * run tests with method name
+	 */
+	public static void runTestMethodsWithoutStop(List<String> testMethods){
+//		List<String> failedTestMethods = new ArrayList<>();
+		
+		System.out.format("test methods size for execution: %d\n", testMethods.size());
+		long startT = System.currentTimeMillis();
+		
+		// debug usage
+//		Collections.reverse(testMethods);
+		// face a weird bug: 
+		// /home/apr/env/jdk1.7.0_80/bin/java -cp /home/apr/d4j/Chart/Chart_17/build/:/home/apr/d4j/Chart/Chart_17/build-tests/:/home/apr/d4j/Chart/Chart_17/lib/servlet.jar:/home/apr/d4j/Chart/Chart_17/lib/itext-2.0.6.jar:/home/apr/apr_tools/tbar-ori/TBar-dale/externel/target/PatchTest-0.0.1-SNAPSHOT-jar-with-dependencies.jar apr.junit.PatchTest -testFile /mnt/benchmarks/buggylocs/Defects4J/Defects4J_Chart_17/Dale_APR/FL/test_methods.txt -runTestMethods true
+		// extra failed test methods.
+		// I tried a lot of attempts, and found that when the positions of failed methods are changed, they passed.
+		// 1) change order -> passed
+		// 2) find that "org.jfree.chart.axis.junit.SegmentedTimelineTests2" impacts the extra failed methods "org.jfree.chart.axis.junit.SegmentedTimelineTests"...
+		// 3) I run arja on Closure 103, my patch test has 115 failed methods, while ajra has 127 failed methods...
+		// The arja cmd is: /home/apr/env/jdk1.8.0_202/jre/bin/java -cp /mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/build/classes/:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/build/test/:/mnt/recursive-repairthemall/RepairThemAll-Nopol/libs/arja_external/bin:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/lib/hamcrest-core-1.1.jar:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/lib/ant_deploy.jar:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/build/classes:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/lib/junit4-legacy.jar:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/lib/junit4-core.jar:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/build/test:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/lib/google_common_deploy.jar:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/lib/protobuf_deploy.jar:/mnt/benchmarks/repairDir/Kali_Defects4J_Closure_103/lib/libtrunk_rhino_parser_jarjared.jar  us.msu.cse.repair.external.junit.JUnitTestRunner   @/mnt/benchmarks/buggylocs/Defects4J/Defects4J_Closure_103/Dale_APR/FL/test_methods.txt
+		// none is perfect.
+		// 4) I tried to export TZ, but still failed.
+		// Therefore, I decided to leave this problem as future work. This is not our focus now.
+		
+		// I find a solution!
+		// 1) I noticed that when running test methods is much more slower than running test cases. (9.8s for closure 103 tests, but 256.9s for test cases)
+		// interestingly, defects4j test uses around 33s... This is strange.
+		// 2) More importantly, there is no error in test method execution.
+		// Therefore, I plan to run tests rather than methods. but in apr test validation, I plan to use the following strategy:
+		// 1) run failed test methods;
+		// 2) run positive test methods in the failed test classes;
+		// 3) run other positive test methods in the rest test classes.
+		// or more simply, we can direct:
+		// 1) run failed test methods;
+		// 2) run all classes.
+		// This is pretty cool and straightforward.
+		
+		int timeout = 200;//timeout for a single method execution
+		DecimalFormat dF = new DecimalFormat("0.0000");
+				
+		for (String testMethod : testMethods){
+			String className = testMethod.split("#")[0];
+			String methodName = testMethod.split("#")[1];
+			
+			// debugging use
+//			runCmdNoOutput("TZ=\"America/New_York\"; export TZ");
+			
+			try {
+//				long startT = System.currentTimeMillis();
+				final Request request = Request.method(Class.forName(className), methodName);
+//				Result result = null;
+				
+//				result = null;
+				try {
+					TimeOut.runWithTimeout(new Runnable() {
+						@Override
+						public void run() {
+							result = new JUnitCore().run(request);
+						}
+					}, timeout, TimeUnit.SECONDS);
+				} catch (Exception e1) {
+					System.out.format("failed method execution timeout: %s\n", className + "#" + methodName);
+					failedTestMethods.add(className + "#" + methodName);
+					e1.printStackTrace();
+					continue;
+				}
+				
+//				Result result = new JUnitCore().run(request);
+				
+				if (result == null){
+					failedTestMethods.add(className + "#" + methodName);
+					System.out.format("failed method execution: %s (result is null)\n", className + "#" + methodName);
+				}else if (!result.wasSuccessful()){
+					failedTestMethods.add(className + "#" + methodName);
+					if (printTrace){
+						for (Failure failure : result.getFailures()){
+							System.out.format("failed trace info: %s\n", failure.getTrace());
+							System.out.format("failed trace description: %s\n", failure.getDescription());
+							// testIssue820(com.google.javascript.jscomp.CollapseVariableDeclarationsTest)
+//							String failedTestClassName = failure.getDescription().toString().trim().split("\\(")[1].split("\\)")[0];
+//							String failedTestMethodName = failure.getDescription().toString().trim().split("\\(")[0];
+//							failedTestMethods.add(failedTestClassName + "#" + failedTestMethodName);
+						}
+					}
+					System.out.format("failed method execution time cost: %s\n", dF.format((float) result.getRunTime()/1000));
+				}
+				
+//				DecimalFormat dF = new DecimalFormat("0.0000");
+//				System.out.format("number of executed tests: %d, time cost: %s\n", result.getRunCount(), dF.format((float) result.getRunTime()/1000));
+			} catch (ClassNotFoundException e) {
+				failedTestMethods.add(className + "#" + methodName);
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}catch (StackOverflowError e) {//Throwable // StackOverflowError
+				failedTestMethods.add(className + "#" + methodName);
+				//unwrap the root cause
+				System.out.format("StackOverflowError. Now exit.\n");
+				e.printStackTrace();
+			}catch (java.lang.Error e) {//Throwable // StackOverflowError
+				failedTestMethods.add(className + "#" + methodName);
+				//unwrap the root cause
+				System.out.format("Other error. Now exit.\n");
+				e.printStackTrace();
+			}
+		}
+		
+		System.out.format("[Junit test] failed test methods size after execution: %d\n", failedTestMethods.size());
+		for (String failed : failedTestMethods){
+			System.out.format("[Junit test] failed test method: %s\n", failed);
+		}
+		
+		System.out.format("[Junit test] Total time cost for running the test method(s): %s\n", dF.format((float) (System.currentTimeMillis() - startT)/1000));
+	}
+	
+	/**
+	 * @Description copy from my apr project 
+	 * @author apr
+	 * @version Apr 5, 2020
+	 *
+	 * @param cmd
+	 */
+	public static void runCmdNoOutput(String cmd) {
+		try{
+			String[] commands = {"bash", "-c", cmd};
+			Process proc = Runtime.getRuntime().exec(commands);
+
+			proc.getInputStream();
+			
+//			BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+//			
+//			// read output
+//			String line = null;
+//			while ((line = stdInput.readLine()) != null){
+//				System.out.println("Cmd Output: " + line);
+////				output += line + "\n";
+//			}
+		}catch (Exception err){
+			err.printStackTrace();
+		}
 	}
 	
 	
