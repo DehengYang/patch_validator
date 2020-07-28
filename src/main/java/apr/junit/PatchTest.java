@@ -41,6 +41,7 @@ public class PatchTest{
 	
 	private static Result result;
 	private static int testCnt = 0;
+	private static String savePath = "";
 	
 	private static Map<String, String> parameters = new HashMap<>();
 	
@@ -65,7 +66,6 @@ public class PatchTest{
 			System.out.format("total test size: %s, executed test size: %s\n", testsToRun.size(), testCnt);
 			// save failed methods
 			if (parameters.containsKey("savePath")){
-				String savePath = parameters.get("savePath");
 				saveFailedMethods(savePath);
 			}
 		}
@@ -97,7 +97,11 @@ public class PatchTest{
 		if (parameters.containsKey("runTestMethods") && parameters.get("runTestMethods").equals("true")){
 			runTestMethods(testsToRun);
 		}else{
-			runTests(testsToRun);
+			if (savePath.contains("replicate")){
+				runTestsWithNoStop(testsToRun);
+			}else{
+				runTests(testsToRun);
+			}
 		}
 	}
 	
@@ -287,7 +291,7 @@ public class PatchTest{
 		
 		int cnt = 0; // test cases/methods cnt
 		int size = tests.size();
-		int testCnt = 0;
+//		int testCnt = 0;
 		
 		int timeout = 600;//timeout for a test class execution
 		DecimalFormat dF = new DecimalFormat("0.0000");
@@ -369,6 +373,115 @@ public class PatchTest{
 				System.out.format("Other error. Now exit.\n");
 				e.printStackTrace();
 				return;
+			}
+		}
+		
+		System.out.format("[Junit test] total test cases in execution: %d\n", cnt);
+		System.out.format("[Junit test] failed tests size after execution: %d\n", failedTests.size());
+		for (String failed : failedTests){
+			System.out.format("[Junit test] failed test: %s\n", failed);
+		}
+		System.out.format("[Junit test] failed test methods size after execution: %d\n", failedTestMethods.size());
+		for (String failed : failedTestMethods){
+			System.out.format("[Junit test] failed test method: %s\n", failed);
+		}
+		
+		System.out.format("[Junit test] Total time cost for running the test(s): %s\n", dF.format((float) (System.currentTimeMillis() - startT)/1000));
+	}
+	
+	/*
+	 * run tests without # (method name)
+	 */
+	public static void runTestsWithNoStop(List<String> tests){
+		List<String> failedTests = new ArrayList<>();
+		
+		System.out.format("tests size for execution: %d\n", tests.size());
+		long startT = System.currentTimeMillis();
+		
+		int cnt = 0; // test cases/methods cnt
+		int size = tests.size();
+//		int testCnt = 0;
+		
+		int timeout = 600;//timeout for a test class execution
+		DecimalFormat dF = new DecimalFormat("0.0000");
+		
+		for (String test : tests){
+			String className = test;
+			
+			try {
+				final Request request = Request.aClass(Class.forName(className));
+				System.out.format("current test: %s\n", className);
+				
+//				result = null;
+				try {
+					TimeOut.runWithTimeout(new Runnable() {
+						@Override
+						public void run() {
+							result = new JUnitCore().run(request);
+						}
+					}, timeout, TimeUnit.SECONDS);
+				} catch (Exception e1) {
+					System.out.format("failed test class execution timeout: %s\n", className);
+					failedTests.add(className);
+					failedTestMethods.add(className);
+					e1.printStackTrace();
+					continue;
+//					return;
+				}
+				
+				if (result == null){
+					failedTests.add(test);
+					failedTestMethods.add(className);
+					System.out.format("failed test class execution: %s (result is null)\n", className);
+					return;
+				}else if(!result.wasSuccessful()){
+					failedTests.add(test);
+					if (printTrace){
+						for (Failure failure : result.getFailures()){
+							System.out.format("failed trace info: %s\n", failure.getTrace());
+							System.out.format("failed trace description: %s\n", failure.getDescription());
+							// testIssue820(com.google.javascript.jscomp.CollapseVariableDeclarationsTest)
+							
+							// general: failed trace description: testIODirectoryNotWritable(org.apache.flink.runtime.taskmanager.TestManagerStartupTest)
+							
+							// failed trace description: org.apache.flink.runtime.io.network.partition.PartialConsumePipelinedResultTest
+							// java.lang.ArrayIndexOutOfBoundsException: 1
+							// exposed by: Bugs.jar_Flink_06e2da35 replicateTests 
+							String desp = failure.getDescription().toString().trim();
+							if (desp.contains("(") && desp.contains(")")){
+								String failedTestClassName = desp.split("\\(")[1].split("\\)")[0];
+								String failedTestMethodName = desp.split("\\(")[0];
+								failedTestMethods.add(failedTestClassName + "#" + failedTestMethodName);
+							}else{
+//								System.out.println("debug1: " + failure.getDescription());
+//								System.out.println("debug2: " + failure.getDescription().toString());
+								failedTestMethods.add(desp + "# ");
+							}
+						}
+					}
+//					return;
+				}
+				
+				cnt = cnt + result.getRunCount();
+				testCnt ++;
+				System.out.format("[%d/%d] number of executed tests: %d, time cost: %s\n", testCnt, size, result.getRunCount(), dF.format((float) result.getRunTime()/1000));
+			} catch (ClassNotFoundException e) {
+				failedTests.add(test);
+				failedTestMethods.add(className);
+				e.printStackTrace();
+//				return;
+			}catch (StackOverflowError e) {//Throwable // StackOverflowError
+				failedTests.add(test);
+				failedTestMethods.add(className);
+				System.out.format("StackOverflowError. Now exit.\n");
+				e.printStackTrace();
+//				return;
+			}catch (java.lang.Error e) {//Throwable // StackOverflowError
+				failedTests.add(test);
+				failedTestMethods.add(className);
+				System.out.format("Other error. Now exit.\n");
+				e.printStackTrace();
+//				return;
 			}
 		}
 		
@@ -628,6 +741,7 @@ public class PatchTest{
         }
         if(cli.hasOption("savePath")){
         	parameters.put("savePath", cli.getOptionValue("savePath"));
+        	savePath  = parameters.get("savePath");
         }
 //		return parameters;
     }
