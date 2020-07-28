@@ -40,6 +40,7 @@ public class PatchTest{
 	private static List<String> failedTestMethods = new ArrayList<>();
 	
 	private static Result result;
+	private static int testCnt = 0;
 	
 	private static Map<String, String> parameters = new HashMap<>();
 	
@@ -61,6 +62,7 @@ public class PatchTest{
 			failedTestMethods.add(String.format("test execution timeout! (%s min)", timeout));
 			er.printStackTrace();
 		} finally{
+			System.out.format("total test size: %s, executed test size: %s\n", testsToRun.size(), testCnt);
 			// save failed methods
 			if (parameters.containsKey("savePath")){
 				String savePath = parameters.get("savePath");
@@ -213,6 +215,7 @@ public class PatchTest{
 			
 			try {
 				final Request request = Request.method(Class.forName(className), methodName);
+				testCnt ++;
 				
 //				result = null;
 				try {
@@ -309,13 +312,15 @@ public class PatchTest{
 					failedTests.add(className);
 					failedTestMethods.add(className);
 					e1.printStackTrace();
-					continue;
+//					continue;
+					return;
 				}
 				
 				if (result == null){
 					failedTests.add(test);
 					failedTestMethods.add(className);
 					System.out.format("failed test class execution: %s (result is null)\n", className);
+					return;
 				}else if(!result.wasSuccessful()){
 					failedTests.add(test);
 					if (printTrace){
@@ -341,6 +346,7 @@ public class PatchTest{
 							}
 						}
 					}
+					return;
 				}
 				
 				cnt = cnt + result.getRunCount();
@@ -350,16 +356,19 @@ public class PatchTest{
 				failedTests.add(test);
 				failedTestMethods.add(className);
 				e.printStackTrace();
+				return;
 			}catch (StackOverflowError e) {//Throwable // StackOverflowError
 				failedTests.add(test);
 				failedTestMethods.add(className);
 				System.out.format("StackOverflowError. Now exit.\n");
 				e.printStackTrace();
+				return;
 			}catch (java.lang.Error e) {//Throwable // StackOverflowError
 				failedTests.add(test);
 				failedTestMethods.add(className);
 				System.out.format("Other error. Now exit.\n");
 				e.printStackTrace();
+				return;
 			}
 		}
 		
