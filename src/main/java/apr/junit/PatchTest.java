@@ -38,6 +38,7 @@ public class PatchTest{
 	private static boolean printTrace = true;
 	private static List<String> testsToRun;
 	private static List<String> failedTestMethods = new ArrayList<>();
+	private static List<String> extraFailedTestMethods = new ArrayList<>();
 	
 	private static Result result;
 	private static int testCnt = 0;
@@ -75,6 +76,30 @@ public class PatchTest{
 		System.exit(0);
 	}
 	
+	public static List<String> readFileToList(String path) {
+        List<String> list = new ArrayList<>();
+        BufferedReader in = null;
+        try {
+            in = new BufferedReader(
+                    new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8));
+            String line;
+            while ((line = in.readLine()) != null) {
+                // if (line.length() == 0) logger.warn(String.format("Empty line in %s", path));
+                list.add(line); // add line
+            }
+
+        } catch (final IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                in.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return list;
+    }
+	
 	public static void mainTask(String[] args){
 		// get all tests
 //		Map<String, String> parameters = setParameters(args);
@@ -86,12 +111,19 @@ public class PatchTest{
 //			}
 //			System.err.println("The paramter should only contain testFile or testStr");
 //		}else 
+		if (parameters.containsKey("extraFailedMethodPath")) {
+		    extraFailedTestMethods = readFileToList(parameters.get("extraFailedMethodPath"));
+		}
+		
 		if (parameters.containsKey("testFile")){
 			String filePath = parameters.get("testFile");
 			testsToRun = readFile(filePath);
 		}else if (parameters.containsKey("testStr")){
 			String testStr = parameters.get("testStr");
 			testsToRun = Arrays.asList(testStr.trim().split(File.pathSeparator));
+			
+			// remove extra failed.
+			testsToRun.removeAll(extraFailedTestMethods);
 		}
 
 		if (parameters.containsKey("runTestMethods") && parameters.get("runTestMethods").equals("true")){
@@ -689,7 +721,11 @@ public class PatchTest{
             String line;
             while ((line = in.readLine()) != null) {
             	if (line.length() == 0) System.err.println(String.format("Empty line in %s", path));
-            	list.add(line); // add line
+            	if (line.trim().endsWith(",false") || line.trim().endsWith(",true")) {
+            	    list.add(line.split(",")[0]);
+            	}else {
+            	    list.add(line); // add line
+            	}
             }
             in.close();
         } catch (final IOException e) {
@@ -712,12 +748,15 @@ public class PatchTest{
         opt3.setRequired(false);  
         Option opt4 = new Option("savePath","savePath",true,"save failed test methods");
         opt4.setRequired(false); 
+        Option opt5 = new Option("extraFailedMethodPath","extraFailedMethodPath",true,"file path which records the unexpectedly failed test methods.");
+        opt5.setRequired(false); 
         
         Options options = new Options();
         options.addOption(opt1);
         options.addOption(opt2);
         options.addOption(opt3);
         options.addOption(opt4);
+        options.addOption(opt5);
 
         CommandLine cli = null;
         CommandLineParser cliParser = new DefaultParser();
@@ -742,6 +781,9 @@ public class PatchTest{
         if(cli.hasOption("savePath")){
         	parameters.put("savePath", cli.getOptionValue("savePath"));
         	savePath  = parameters.get("savePath");
+        }
+        if(cli.hasOption("extraFailedMethodPath")){
+            parameters.put("extraFailedMethodPath", cli.getOptionValue("extraFailedMethodPath"));
         }
 //		return parameters;
     }
