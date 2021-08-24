@@ -13,6 +13,13 @@
         <maven.compiler.target>1.7</maven.compiler.target>
     </properties>
     <dependencies>
+        <!-- for file utils -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.5</version>
+        </dependency>
+        
 		<!-- for parameter setup -->
 	    <dependency>
 		    <groupId>commons-cli</groupId>
