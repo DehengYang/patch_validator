@@ -80,19 +80,17 @@ public class PatchCompile {
      * @param outputPath
      */
     public void setOutputPath(String outputPath) {
-        if (cleanCompileOutDir) {
-            File dir = new File(outputPath);
-            // refer to: https://stackoverflow.com/questions/20281835/how-to-delete-a-folder-with-files-using-java
-            if (dir.exists()) {
-                try {
-                    FileUtils.deleteDirectory(new File(outputPath));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        File dir = new File(outputPath);
+        // refer to: https://stackoverflow.com/questions/20281835/how-to-delete-a-folder-with-files-using-java
+        if (dir.exists() && cleanCompileOutDir) {
+            try {
+                FileUtils.deleteDirectory(new File(outputPath));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
+        }
+        if (!dir.exists()) {
+            dir.mkdirs();
         }
 
         compilerOpts.add("-d");
