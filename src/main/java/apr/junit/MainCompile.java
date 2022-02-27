@@ -6,7 +6,6 @@ package apr.junit;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
@@ -23,21 +22,20 @@ import org.apache.commons.cli.ParseException;
 public class MainCompile {
     public static void main(String[] args) {
         Map<String, String> argsMap = parseCommandLine(args);
-        PatchCompile pc = new PatchCompile(argsMap.get("logFilePath"), 
-                Arrays.asList(argsMap.get("dependencies").split(":")), argsMap.get("jvmPath"), 
-                argsMap.get("outputDirPath"));
+        PatchCompile pc = new PatchCompile(argsMap.get("logFilePath"),
+                Arrays.asList(argsMap.get("dependencies").split(":")), argsMap.get("jvmPath"),
+                argsMap.get("outputDirPath"), Boolean.getBoolean(argsMap.get("cleanCompileOutDir")));
         Boolean result = pc.compilePatchFile(argsMap.get("tmpPatchFile"));
-        System.out.println("[compilation result] "+ result);
+        System.out.println("[compilation result] " + result);
     }
-    
-    
+
     private static Map<String, String> parseCommandLine(String[] args) {
         Map<String, String> argsMap = new HashMap<>();
 
         /*
          * String logFilePath, List<String> dependencies, String jvmPath, String outputDirPath
          */
-        
+
         Options options = new Options();
         options.addRequiredOption("logFilePath", "logFilePath", true,
                 "log file path");
@@ -49,6 +47,8 @@ public class MainCompile {
                 "jvmPath");
         options.addRequiredOption("tmpPatchFile", "tmpPatchFile", true,
                 "tmpPatchFile");
+        options.addRequiredOption("cleanCompileOutDir", "cleanCompileOutDir", true,
+                "cleanCompileOutDir");
 
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
@@ -68,7 +68,7 @@ public class MainCompile {
         argsMap.put("outputDirPath", cmd.getOptionValue("outputDirPath"));
         argsMap.put("jvmPath", cmd.getOptionValue("jvmPath"));
         argsMap.put("tmpPatchFile", cmd.getOptionValue("tmpPatchFile"));
-        
+
         return argsMap;
     }
 }

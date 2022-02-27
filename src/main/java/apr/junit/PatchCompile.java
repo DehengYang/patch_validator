@@ -26,13 +26,17 @@ public class PatchCompile {
     private String outputDirPath;
     private String logFilePath;
 
+    // for multiple file patch
+    private boolean cleanCompileOutDir;
+
     /**
      * 
      * @param dependencies
      * @param jvmPath
      * @param outputDirPath: this is a folder path, not a file path.
      */
-    public PatchCompile(String logFilePath, List<String> dependencies, String jvmPath, String outputDirPath) {
+    public PatchCompile(String logFilePath, List<String> dependencies, String jvmPath, String outputDirPath,
+            boolean cleanCompileOutDir) {
         this.deps = dependencies;
         this.jvmPath = jvmPath;
         if (this.jvmPath.contains("jdk1.8")) {
@@ -42,7 +46,8 @@ public class PatchCompile {
         }
         this.outputDirPath = outputDirPath;
         this.logFilePath = logFilePath;
-        
+        this.cleanCompileOutDir = cleanCompileOutDir;
+
         init();
     }
 
@@ -53,17 +58,17 @@ public class PatchCompile {
         compilerOpts.add(compileLevel);
         // Refer to: Nopol DynamicClassCompiler.java
         // options = asList("-nowarn", "-source", "1." + compliance, "-target", "1." + compliance);
-        
+
         compilerOpts.add("-target");
         compilerOpts.add(compileLevel);
         compilerOpts.add("-cp");
-        
+
         String depStr = "";
         for (String dep : deps) {
             depStr += File.pathSeparator + dep;
         }
         compilerOpts.add(depStr);
-        
+
         setOutputPath(this.outputDirPath);
     }
 
@@ -75,17 +80,19 @@ public class PatchCompile {
      * @param outputPath
      */
     public void setOutputPath(String outputPath) {
-        File dir = new File(outputPath);
-        // refer to: https://stackoverflow.com/questions/20281835/how-to-delete-a-folder-with-files-using-java
-        if (dir.exists()) {
-            try {
-                FileUtils.deleteDirectory(new File(outputPath));
-            } catch (IOException e) {
-                e.printStackTrace();
+        if (cleanCompileOutDir) {
+            File dir = new File(outputPath);
+            // refer to: https://stackoverflow.com/questions/20281835/how-to-delete-a-folder-with-files-using-java
+            if (dir.exists()) {
+                try {
+                    FileUtils.deleteDirectory(new File(outputPath));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-        }
-        if (!dir.exists()) {
-            dir.mkdirs();
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
         }
 
         compilerOpts.add("-d");
@@ -124,8 +131,8 @@ public class PatchCompile {
             String error = String.format("%s (at line %d)\n",
                     diagnostic.getMessage(null),
                     diagnostic.getLineNumber());
-//            System.err.println(error);
-            
+            // System.err.println(error);
+
             FileUtil.writeToFile(logFilePath, error);
         }
 

@@ -246,7 +246,7 @@ public class PatchTest {
         // 2) run all classes.
         // This is pretty cool and straightforward.
 
-        int timeout = 200;// timeout for a single method execution
+        int timeout = 20;// timeout for a single method execution
         DecimalFormat dF = new DecimalFormat("0.0000");
         for (String testMethod : testMethods) {
             runSingleMethod(testMethod, timeout);
