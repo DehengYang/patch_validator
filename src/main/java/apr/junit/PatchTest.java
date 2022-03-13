@@ -122,12 +122,12 @@ public class PatchTest {
         } else if (parameters.containsKey("testStr")) {
             String testStr = parameters.get("testStr");
             testsToRun = Arrays.asList(testStr.trim().split(File.pathSeparator));
-
-            // remove extra failed.
-            testsToRun.removeAll(extraFailedTestMethods);
         }
 
         if (parameters.containsKey("runTestMethods") && parameters.get("runTestMethods").equals("true")) {
+            // remove extra failed.
+            testsToRun.removeAll(extraFailedTestMethods);
+            
             runTestMethods(testsToRun);
         } else {
             if (savePath.contains("replicate")) {
