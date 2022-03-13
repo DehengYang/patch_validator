@@ -36,6 +36,7 @@ import apr.junit.utils.TimeOut;
  */
 public class PatchTest {
     private static boolean printTrace = true;
+    private static boolean earlyExit = true;
     private static List<String> testsToRun;
     private static List<String> failedTestMethods = new ArrayList<>();
     private static List<String> extraFailedTestMethods = new ArrayList<>();
@@ -250,6 +251,12 @@ public class PatchTest {
         DecimalFormat dF = new DecimalFormat("0.0000");
         for (String testMethod : testMethods) {
             runSingleMethod(testMethod, timeout);
+            if (earlyExit) {
+                if (!failedTestMethods.isEmpty()) {
+                    System.out.format("failedTestMethods is not empty. early exit now.\n");
+                    break;
+                }
+            }
         }
 
         System.out.format("[Junit test] failed test methods size after execution: %d\n",
@@ -261,8 +268,6 @@ public class PatchTest {
         System.out.format("[Junit test] Total time cost for running the test method(s): %s\n",
                 dF.format((float) (System.currentTimeMillis() - startT) / 1000));
     }
-    
-    
 
     /**
      * date: Aug 23, 2021
@@ -324,7 +329,7 @@ public class PatchTest {
             e.printStackTrace();
             return;
         }
-        
+
     }
 
     /*
@@ -780,12 +785,17 @@ public class PatchTest {
                 "file path which records the unexpectedly failed test methods.");
         opt5.setRequired(false);
 
+        Option opt6 = new Option("earlyExit", "earlyExit", true,
+                "return if a failed test is found.");
+        opt6.setRequired(false);
+
         Options options = new Options();
         options.addOption(opt1);
         options.addOption(opt2);
         options.addOption(opt3);
         options.addOption(opt4);
         options.addOption(opt5);
+        options.addOption(opt6);
 
         CommandLine cli = null;
         CommandLineParser cliParser = new DefaultParser();
@@ -813,6 +823,9 @@ public class PatchTest {
         }
         if (cli.hasOption("extraFailedMethodPath")) {
             parameters.put("extraFailedMethodPath", cli.getOptionValue("extraFailedMethodPath"));
+        }
+        if (cli.hasOption("earlyExit")) {
+            earlyExit = Boolean.parseBoolean(cli.getOptionValue("earlyExit"));
         }
         // return parameters;
     }
