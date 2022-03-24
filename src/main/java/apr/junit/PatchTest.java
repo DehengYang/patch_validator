@@ -36,7 +36,7 @@ import apr.junit.utils.TimeOut;
  */
 public class PatchTest {
     private static boolean printTrace = true;
-    private static boolean earlyExit = true;
+    private static boolean earlyExit = false; // not early exit by default (for fl test replication module)
     private static List<String> testsToRun;
     private static List<String> failedTestMethods = new ArrayList<>();
     private static List<String> extraFailedTestMethods = new ArrayList<>();
@@ -127,7 +127,7 @@ public class PatchTest {
         if (parameters.containsKey("runTestMethods") && parameters.get("runTestMethods").equals("true")) {
             // remove extra failed.
             testsToRun.removeAll(extraFailedTestMethods);
-            
+
             runTestMethods(testsToRun);
         } else {
             if (savePath.contains("replicate")) {
